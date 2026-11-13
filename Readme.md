@@ -1,7 +1,7 @@
 # HAWK — Travessia Inteligente e Acessível
 
 <p align="center">
-  <strong>Tecnologia e acessibilidade para uma mobilidade urbana mais inclusiva.</strong>
+  **Tecnologia e acessibilidade para uma mobilidade urbana mais inclusiva.**
 </p>
 
 ---
@@ -224,10 +224,20 @@ Projeto desenvolvido como parte da **Global Solution 2026.2 — FIAP**, dentro d
 
 A iniciativa busca demonstrar como a integração entre Internet das Coisas, processamento na borda e acessibilidade pode contribuir para a construção de cidades mais inteligentes e inclusivas.
 
-**HAWK — A cidade que se adapta a você.**
+## Equipe HAWK
+
+| Integrante | RM |
+|---|---:|
+| Esther dos Santos de Almeida Tozzo | 570860 |
+| Felipe de Oliveira Zimmermann | 570863 |
+| Izabela Pordeus de Almeida | 570316 |
+| João Victor Santos Souza | 569949 |
+| Matheus Lopes Lima | 571458 |
 
 ---
 
 <p align="center">
-  Desenvolvido pela equipe HAWK • FIAP • 2026
+  **HAWK — A cidade que se adapta a você.**
+  <br/>
+  FIAP • Global Solution 2026.2
 </p>
