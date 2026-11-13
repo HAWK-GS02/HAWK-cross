@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HAWK | Painel da Travessia</title>
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<style>
+  :root{--bg:#0f172a;--card:#1e293b;--tx:#f8fafc;--mut:#94a3b8;--ok:#22c55e;--am:#facc15;--vm:#ef4444;--az:#38bdf8}
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx);padding:16px}
+  h1{font-size:1.4rem;margin:0} .top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .pill{padding:4px 12px;border-radius:99px;background:var(--card);font-size:.85rem}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .card{background:var(--card);border-radius:14px;padding:18px} .card h2{margin:0 0 10px;font-size:.95rem;color:var(--mut);font-weight:600}
+  .estado{font-size:2rem;font-weight:800} .msg{font-size:1.15rem;margin-top:8px;line-height:1.4}
+  .sem{display:flex;gap:28px;justify-content:center}
+  .poste{background:#020617;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;align-items:center}
+  .poste small{color:var(--mut)} .lamp{width:34px;height:34px;border-radius:50%;background:#334155;transition:.2s}
+  .on-r{background:var(--vm);box-shadow:0 0 14px var(--vm)} .on-a{background:var(--am);box-shadow:0 0 14px var(--am)} .on-g{background:var(--ok);box-shadow:0 0 14px var(--ok)}
+  .bar{height:16px;background:#334155;border-radius:8px;overflow:hidden;margin:6px 0} .bar>div{height:100%;background:var(--az);width:0;transition:.3s}
+  .kpi{display:flex;justify-content:space-between;margin:6px 0} .kpi b{font-size:1.3rem}
+  .alerta{padding:12px;border-radius:10px;background:#14532d} .alerta.falha{background:#7f1d1d}
+  #log{max-height:210px;overflow:auto;font-family:monospace;font-size:.82rem;color:var(--mut)}
+  button{background:var(--az);color:#00131f;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer;margin:4px 4px 0 0}
+  button.sec{background:#475569;color:var(--tx)}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>HAWK · Travessia Acessível — Cruzamento 01</h1>
+  <span class="pill" id="conn">● desconectado</span>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>PARA O CIDADÃO (pessoa com mobilidade reduzida)</h2>
+    <div class="estado" id="estado">—</div>
+    <div class="msg" id="msg">Aguardando dados do semáforo…</div>
+  </div>
+
+  <div class="card">
+    <h2>SEMÁFOROS (estado real do ESP32)</h2>
+    <div class="sem">
+      <div class="poste"><small>Veículos</small><div class="lamp" id="vr"></div><div class="lamp" id="va"></div><div class="lamp" id="vv"></div></div>
+      <div class="poste"><small>Pedestre</small><div class="lamp" id="pr"></div><div class="lamp" id="pv"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>SENSORES</h2>
+    <div class="kpi"><span>Confiança da detecção (média)</span><b id="conf">0%</b></div>
+    <div class="bar"><div id="confbar"></div></div>
+    <div class="kpi"><span>Fonte da detecção</span><b id="fonte" style="font-size:1rem">—</b></div>
+  </div>
+
+  <div class="card">
+    <h2>PARA O AGENTE DE TRÂNSITO / CET</h2>
+    <div class="alerta" id="alerta">Sistema operando normalmente.</div>
+    <div class="kpi"><span>Travessias concluídas</span><b id="nTrav">0</b></div>
+    <div class="kpi"><span>Espera média</span><b id="mEspera">—</b></div>
+    <div class="kpi"><span>Tempo médio de travessia</span><b id="mTrav">—</b></div>
+    <div class="kpi"><span>Extensões na travessia atual</span><b id="ext">0</b></div>
+    <div class="kpi"><span>Falhas registradas</span><b id="nFalha">0</b></div>
+  </div>
+
+  <div class="card">
+    <h2>TESTE (publica como se fosse a câmera/YOLO)</h2>
+    <button onclick="cam(90)">Pessoa com mobilidade reduzida detectada (90%)</button>
+    <button class="sec" onclick="cam(5)">Ninguém (5%)</button>
+  </div>
+
+  <div class="card"><h2>HISTÓRICO DE EVENTOS</h2><div id="log"></div></div>
+</div>
+
+<script>
+const BASE = "fiap-hawk-gs2026/cruzamento01";
+const MENSAGENS = {
+  NORMAL:    "Semáforo em operação normal. Nenhuma travessia pendente.",
+  DETECTADO: "Detectamos você! Os veículos estão sendo avisados. Aguarde.",
+  TRAVESSIA: "PODE ATRAVESSAR. Veículos parados. Siga com calma, o tempo é garantido.",
+  LIBERACAO: "Travessia concluída. Veículos serão liberados.",
+  FALHA:     "Sistema em modo seguro: ciclo padrão com tempo mínimo de travessia garantido."
+};
+const COR = {NORMAL:"#22c55e",DETECTADO:"#facc15",TRAVESSIA:"#38bdf8",LIBERACAO:"#facc15",FALHA:"#ef4444"};
+const $ = id => document.getElementById(id);
+let extAnt = 0, ultimo = null, esperas = [], travs = [], nFalha = 0;
+
+const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
+client.on("connect", () => { $("conn").textContent = "● conectado"; client.subscribe(BASE + "/telemetria"); });
+client.on("close",   () => { $("conn").textContent = "● desconectado"; });
+client.on("message", (t, buf) => { try { atualiza(JSON.parse(buf.toString())); } catch(e) { console.warn(e); } });
+
+function luzes(e){
+  const m = {NORMAL:[0,0,1,1,0], DETECTADO:[0,1,0,1,0], TRAVESSIA:[1,0,0,0,1], LIBERACAO:[0,1,0,1,0], FALHA:null}[e];
+  const f = m || [0,0,0,0,0];
+  ["vr","va","vv","pr","pv"].forEach((id,i)=>{ $(id).className = "lamp" + (f[i] ? " on-" + (id==="va"?"a":(id==="vr"||id==="pr")?"r":"g") : ""); });
+}
+function log(txt){ const d=document.createElement("div"); d.textContent = new Date().toLocaleTimeString()+"  "+txt; $("log").prepend(d); }
+const med = a => a.length ? (a.reduce((x,y)=>x+y,0)/a.length/1000).toFixed(1)+" s" : "—";
+
+function atualiza(d){
+  $("estado").textContent = d.estado; $("estado").style.color = COR[d.estado];
+  $("msg").textContent = MENSAGENS[d.estado] || "";
+  $("conf").textContent = d.conf.toFixed(0) + "%"; $("confbar").style.width = d.conf + "%";
+  $("fonte").textContent = d.fonte;
+  luzes(d.estado);
+  $("ext").textContent = d.extensoes || 0;
+  if (d.estado === "TRAVESSIA" && d.extensoes > 0)
+    $("msg").textContent = `Tempo ESTENDIDO (${d.extensoes}x): detectamos você ainda atravessando. Siga com calma.`;
+  if (d.extensoes !== extAnt) { if (d.extensoes > 0) log(`Travessia estendida (${d.extensoes}x) → prazo ${(d.prazo_ms/1000).toFixed(0)} s`); extAnt = d.extensoes; }
+  if (ultimo !== d.estado) {
+    log(`${ultimo || "início"} → ${d.estado} (conf ${d.conf.toFixed(0)}%)`);
+    if (d.estado === "TRAVESSIA") esperas.push(d.espera_ms);
+    if (d.estado === "LIBERACAO") { travs.push(d.travessia_ms); log("Fim da travessia: " + d.motivo); }
+    if (d.estado === "FALHA") nFalha++;
+    ultimo = d.estado;
+  }
+  $("nTrav").textContent = travs.length; $("nFalha").textContent = nFalha;
+  $("mEspera").textContent = med(esperas); $("mTrav").textContent = med(travs);
+  const a = $("alerta");
+  a.className = "alerta" + (d.falha ? " falha" : "");
+  a.textContent = d.falha ? "ALERTA: sensor/câmera inválido — equipe de manutenção deve verificar o cruzamento." : "Sistema operando normalmente.";
+}
+function cam(c){ client.publish(BASE + "/camera", JSON.stringify({cadeirante: c > 50, conf: c})); log("Teste enviado: conf=" + c); }
+</script>
+</body>
+</html>

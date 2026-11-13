@@ -1,0 +1,302 @@
+{
+  "version": 1,
+  "author": "Equipe HAWK",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 40,
+      "left": 200,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot1",
+      "top": 200,
+      "left": 20,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 60,
+      "left": 60,
+      "attrs": {
+        "color": "blue"
+      }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "bz1",
+      "top": 340,
+      "left": 220,
+      "attrs": {
+        "volume": "0.1"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rVR",
+      "top": 5,
+      "left": 420,
+      "attrs": {
+        "value": "330"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledVR",
+      "top": -20,
+      "left": 560,
+      "attrs": {
+        "color": "red",
+        "label": "Veic Verm"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rVA",
+      "top": 55,
+      "left": 420,
+      "attrs": {
+        "value": "330"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledVA",
+      "top": 30,
+      "left": 560,
+      "attrs": {
+        "color": "yellow",
+        "label": "Veic Amar"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rVV",
+      "top": 105,
+      "left": 420,
+      "attrs": {
+        "value": "330"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledVV",
+      "top": 80,
+      "left": 560,
+      "attrs": {
+        "color": "green",
+        "label": "Veic Verde"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rPR",
+      "top": 185,
+      "left": 420,
+      "attrs": {
+        "value": "330"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledPR",
+      "top": 160,
+      "left": 560,
+      "attrs": {
+        "color": "red",
+        "label": "Ped Verm"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rPV",
+      "top": 235,
+      "left": 420,
+      "attrs": {
+        "value": "330"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledPV",
+      "top": 210,
+      "left": 560,
+      "attrs": {
+        "color": "limegreen",
+        "label": "Ped Verde"
+      }
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd1",
+      "top": -200,
+      "left": 420,
+      "attrs": {
+        "pins": "i2c"
+      }
+    }
+  ],
+  "connections": [
+    [
+      "pot1:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "pot1:SIG",
+      "esp:34",
+      "orange",
+      []
+    ],
+    [
+      "pot1:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "btn1:1.l",
+      "esp:4",
+      "purple",
+      []
+    ],
+    [
+      "btn1:2.l",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "esp:23",
+      "bz1:2",
+      "gold",
+      []
+    ],
+    [
+      "bz1:1",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "esp:25",
+      "rVR:1",
+      "red",
+      []
+    ],
+    [
+      "rVR:2",
+      "ledVR:A",
+      "red",
+      []
+    ],
+    [
+      "ledVR:C",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "esp:26",
+      "rVA:1",
+      "yellow",
+      []
+    ],
+    [
+      "rVA:2",
+      "ledVA:A",
+      "yellow",
+      []
+    ],
+    [
+      "ledVA:C",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "esp:27",
+      "rVV:1",
+      "green",
+      []
+    ],
+    [
+      "rVV:2",
+      "ledVV:A",
+      "green",
+      []
+    ],
+    [
+      "ledVV:C",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "esp:32",
+      "rPR:1",
+      "red",
+      []
+    ],
+    [
+      "rPR:2",
+      "ledPR:A",
+      "red",
+      []
+    ],
+    [
+      "ledPR:C",
+      "esp:GND.3",
+      "black",
+      []
+    ],
+    [
+      "esp:33",
+      "rPV:1",
+      "green",
+      []
+    ],
+    [
+      "rPV:2",
+      "ledPV:A",
+      "green",
+      []
+    ],
+    [
+      "ledPV:C",
+      "esp:GND.3",
+      "black",
+      []
+    ],
+    [
+      "lcd1:GND",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "lcd1:VCC",
+      "esp:5V",
+      "red",
+      []
+    ],
+    [
+      "lcd1:SDA",
+      "esp:21",
+      "blue",
+      []
+    ],
+    [
+      "lcd1:SCL",
+      "esp:22",
+      "yellow",
+      []
+    ]
+  ],
+  "dependencies": {}
+}
